@@ -1,0 +1,65 @@
+html, body, div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, code, form, fieldset, legend, input, button, textarea, p, blockquote, th, td {
+    margin: 0;
+    padding: 0;
+}
+body {background-image:url(/img/fonssc-mobile.jpg);background-repeat:repeat-x;}
+#mobilebody {    margin: 0 auto;max-width: 45em;min-width: 280px;}
+#header {clear:both;width:100%;float:left; padding-left: 15px;}
+.logo_home {
+    display: inline;
+    float: left;
+    position: relative;
+    width: 192px;
+}
+.logo_home img {height:50px;border:none;}
+.versioord {
+    color: #FFFFFF;
+    float: right;
+    padding-right: 20px;
+}
+.versioord a {color: #FFFFFF; text-decoration:none; font-size:12px; font-weight:bold;}
+#section {width:100%; padding:10px; height:50px;float:left;clear:right; padding-left: 15px;}
+#section h1 {color: #FFFFFF; font-weight:bold; font-family: Arial,Helvetica,sans-serif; valign:middle; float:left;}
+
+#footer {
+    background: none repeat scroll 0 0 #E5E3D8;
+    color: #000000;
+    font-family: Verdana,Arial,Helvetica,sans-serif;
+    font-size: 13px;
+    margin-top: 25px;
+    padding: 0 0 70px;
+    text-align: center;
+    width: 100%;
+}
+
+/** Traductor **/
+#area, #inter {clear:left;}
+textarea, #langpair {margin: 0 auto; display:block;}
+textarea {width: 90%; font-size: 13px;}
+#buttons, #opcions {margin: 15px auto 10px; display:block; text-align:center;}
+#inter select {font-size:100%;}
+#buttons input {font-size:120%; padding: 5px;}
+#opcions p {padding:5px; margin:0px;}
+#opcions #unknown, #opcions #valencia {-moz-transform: scale(1.3,1.3); -webkit-transform: scale(1.3,1.3); -o-transform: scale(1.3,1.3); transform: scale(1.3,1.3); margin-right: 5px;}
+#ad {width:240px; margin: 15px auto 10px; display:block; text-align:center;}
+#dv_traduccio {width: 90%; margin: 20px auto; display:block;}
+#dv_traduccio h3 {text-align:center; margin: 5px auto 5px;}
+#dv_traduccio textarea {width:100%;}
+.link_select {
+    font-size:0.8em;
+    padding-top:10px;
+    color:#666;
+    text-align:center;
+    margin:5px;
+}
+#dv_traduccio input {font-size:110%; padding: 5px;}
+.link_select span {
+    cursor:pointer;
+}
+#logos {margin: 30px auto 10px; width:95%; float:left; border-top: 1px dotted #B4B1A2; padding: 15px;}
+#logos div {margin: 0 auto; width:100%; float:left;}
+#logos .icon {text-align:center; width:50%;}
+#logos .left {float:left;}
+#logos .right {float:right;}
+#logos .icon a {text-decoration:none;}
+#logos .icon img {min-width:120px; max-width:135px;text-align:center; border:none; padding: 5px; margin-left: auto; margin-right: auto; !important}

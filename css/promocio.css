@@ -1,0 +1,46 @@
+/* Added for button selection */
+
+#add_button {
+     width:100%;
+}
+
+#formulari_button {
+       float: left;
+       clear:both;
+       width:100%;
+       margin:0 0 5px 0;
+
+}
+
+#formulari_button select {
+    border:1px solid silver;
+}
+
+#button_result {
+
+	width:100%;
+	clear:both;
+
+}
+
+#button_result textarea {
+    border:1px solid silver;
+    width:100%;
+}
+
+#button_counter {
+    float:left;
+    clear:both;
+    margin:5px 0 5px 0;
+
+    width:100%;
+}
+
+#button_code {
+    float:left;
+    width:100%;
+    clear:both;
+    
+}
+
+
