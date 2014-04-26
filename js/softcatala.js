@@ -306,4 +306,14 @@ function llista_enable(cas) {
 
 }
 
+/** Cookie messages **/
+$(document).ready(function () {
+	$.cookieCuttr({
+		cookieAnalyticsMessage: 'Aquest lloc web utilitza galetes...',
+		cookieWhatAreTheyLink: '/avislegal.htm'
+	});
+}); 
+
+
+
 
