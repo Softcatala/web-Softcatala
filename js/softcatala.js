@@ -309,7 +309,7 @@ function llista_enable(cas) {
 /** Cookie messages **/
 $(document).ready(function () {
 	$.cookieCuttr({
-		cookieAnalyticsMessage: 'Aquest lloc web utilitza galetes (cookies) pròpies i de tercers. Si continueu navegant-hi, entenem que n\'accepteu l\'ús.',
+		cookieAnalyticsMessage: 'Aquest web utilitza galetes pròpies i de tercers per optimitzar i adaptar-se a la vostra navegació i preferències, entre altres tasques. Si continueu navegant entendrem que accepteu la nostra Política de privadesa.',
 		cookieWhatAreTheyLink: '/avislegal.htm',
 		cookieAcceptButtonText: 'Accepta',
 		cookieWhatAreLinkText: 'Més informació...'
