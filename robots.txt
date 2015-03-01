@@ -78,4 +78,6 @@ Allow: /w/sitemaps/sitemap-wikidb-NS_2-0.xml.gz
 Allow: /w/sitemaps/sitemap-wikidb-NS_3-0.xml.gz
 # Catalanitzador
 Disallow: /dev-catalanitzador/
+# Programes FTP
+Disallow: /pub/
 
