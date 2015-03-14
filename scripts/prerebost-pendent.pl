@@ -18,6 +18,8 @@ binmode STDOUT, ":utf8";
 use Config::JSON;
 use 5.010;
 
+my $config = Config::JSON->new("config.json");
+
 # Username and password.
 my $user = $config->get("username") // "";
 my $pass = $config->get("password") // "";
