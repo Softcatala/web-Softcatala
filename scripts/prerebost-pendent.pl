@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use MediaWiki::Bot;
+use MediaWiki::API;
 use utf8;
 use Encode;
 use Carp;
@@ -17,8 +17,9 @@ binmode STDOUT, ":utf8";
 
 use Config::JSON;
 use 5.010;
+my $config_json = shift // "config.json";
 
-my $config = Config::JSON->new("config.json");
+my $config = Config::JSON->new( $config_json );
 
 # Username and password.
 my $user = $config->get("username") // "";
@@ -27,34 +28,32 @@ my $host = $config->get("host") // "www.softcatala.org";
 my $protocol = $config->get("protocol") // "https";
 my $path = $config->get("path") // "w";
 
-#Create a Perlwikipedia object
-my $editor = MediaWiki::Bot->new({
-        host    => $host,
-        debug   => 2,
-        assert  => 'bot',
-        protocol    => $protocol,
-        path        => $path
-});
+# Let's initialize bot
 
-$editor->login({
-        username => $user,
-        password => $pass,
-}) or die "Login failed";
+my $mw = MediaWiki::API->new( { api_url =>  $protocol."://".$host."/".$path."/api.php" }  );
+
+#log in to the wiki
+$mw->login( {lgname => $user, lgpassword => $pass } )
+  || die $mw->{error}->{code} . ': ' . $mw->{error}->{details};
 
 
-# Turn debugging on, to see what the bot is doing
-$editor->{debug} = 1;
-
-my @pages = $editor->get_pages_in_category('Category:PreRebost');
+# get a list of articles in category
+my $pages = $mw->list ( {
+  action => 'query',
+  list => 'categorymembers',
+  cmtitle => 'Category:PreRebost',
+  cmlimit => 'max' } )
+  || die $mw->{error}->{code} . ': ' . $mw->{error}->{details};
 
 my $body = "Queda pendent al PreRebost:\n
 https://www.softcatala.org/wiki/Categoria:PreRebost\n\n";
 
-foreach my $page (@pages) {
+foreach my $page (@{$pages}) {
 
+    my $title = $page->{title};
 	#Espais
-	$page=~s/\s/\_/g;
-	$body.="https://www.softcatala.org/wiki/".$page."\n";
+	$title=~s/\s/\_/g;
+	$body.="https://www.softcatala.org/wiki/".$title."\n";
 
 }
 
@@ -67,28 +66,28 @@ my $msg = MIME::Lite->new (
     To         => "$to"                        ,
     Subject    => "$subject"                   ,
     Type       => 'multipart/related',
-    );
+);
 
-   $body = toutf8('latin1', $body);
+$body = toutf8('latin1', $body);
 
-    $msg->attach(
-        Type     => 'text/plain; charset=UTF-8',
-        Data     => $body,
-        Encoding => 'quoted-printable',
-    );
+$msg->attach(
+    Type     => 'text/plain; charset=UTF-8',
+    Data     => $body,
+    Encoding => 'quoted-printable',
+);
 
-    $msg->send;
+$msg->send;
 
 
 sub toutf8 {
-#takes: $from_encoding, $text
-#returns: $text in utf8
-my $encoding = shift;
-my $text = shift;
-if ($encoding =~ /utf\-?8/i) {
-return $text;
-}
-else {
-return Encode::encode("utf8", Encode::decode($encoding, $text));
-}
+    #takes: $from_encoding, $text
+    #returns: $text in utf8
+    my $encoding = shift;
+    my $text = shift;
+    if ($encoding =~ /utf\-?8/i) {
+        return $text;
+    }
+    else {
+        return Encode::encode("utf8", Encode::decode($encoding, $text));
+    }
 }
