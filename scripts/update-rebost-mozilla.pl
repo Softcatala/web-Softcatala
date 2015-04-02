@@ -18,11 +18,11 @@ my $config_json = shift // "config.json";
 my $config = Config::JSON->new( $config_json );
 
 # Username and password.
-my $user = $config->get("username") // "";
-my $pass = $config->get("password") // "";
-my $host = $config->get("host") // "www.softcatala.org";
-my $protocol = $config->get("protocol") // "https";
-my $path = $config->get("path") // "w";
+my $user = $config->get("mw/username") // "";
+my $pass = $config->get("mw/password") // "";
+my $host = $config->get("mw/host") // "www.softcatala.org";
+my $protocol = $config->get("mw/protocol") // "https";
+my $path = $config->get("mw/path") // "w";
 
 binmode STDIN, ":utf8";
 binmode STDOUT, ":utf8";
