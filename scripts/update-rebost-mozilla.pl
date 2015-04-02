@@ -244,7 +244,7 @@ sub send2wiki {
             $mw->edit( {
                 action => 'edit',
                 title => $nompage,
-                section => $edit_summary,
+                summary => $edit_summary,
                 basetimestamp => $timestamp, # to avoid edit conflicts
                 text => $utf8 } )
             || die $mw->{error}->{code} . ': ' . $mw->{error}->{details};
