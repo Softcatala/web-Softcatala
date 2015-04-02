@@ -32,8 +32,9 @@ my $edit_summary = "Refresh";
 refreshPage( $template );
 
 $mw->list ( { action => 'query',
-              cmnamespace => 14, #Category namespace
-              cmlimit=>'max' },
+              apnamespace => 14, #Category namespace
+              list => 'allpages',
+              aplimit=>'max' },
             { max => 100, hook => \&process_category } )
 || die $mw->{error}->{code} . ': ' . $mw->{error}->{details};
 
