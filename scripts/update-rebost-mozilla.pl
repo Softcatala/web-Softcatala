@@ -8,12 +8,14 @@ use Encode;
 use Encode::Guess;
 use Data::Dumper;
 use JSON -support_by_pp;
-use MediaWiki::Bot;
+use MediaWiki::API;
 
 use Config::JSON;
 use 5.010;
 
-my $config = Config::JSON->new("config.json");
+my $config_json = shift // "config.json";
+
+my $config = Config::JSON->new( $config_json );
 
 # Username and password.
 my $user = $config->get("username") // "";
@@ -25,12 +27,17 @@ my $path = $config->get("path") // "w";
 binmode STDIN, ":utf8";
 binmode STDOUT, ":utf8";
 
+# Let's initialize bot
+
+my $mw = MediaWiki::API->new( { api_url =>  $protocol."://".$host."/".$path."/api.php" }  );
+
+#log in to the wiki
+$mw->login( {lgname => $user, lgpassword => $pass } )
+  || die $mw->{error}->{code} . ': ' . $mw->{error}->{details};
+
 # This script assumes all OS versions will be the same. Sometimes not been the case. Al loro!
 
-my $output = shift;
-
 my %product;
-my $downwrapper = "http://baixades.mozilla.cat/?";
 #http://baixades.softcatala.org/?url=http%3A%2F%2Fdownload.mozilla.org%2F%3Fproduct%3Dfirefox-3.6%26os%3Dlinux%26lang%3Dca&id=3522&mirall=mozilla&extern=1rediris&versio=3.6&so=linux
 #params: id (from text file), url, mirall, extern, versio, so
 
@@ -180,20 +187,8 @@ sub send2wiki {
     my $version = shift;
     my $nomrebost = shift;
     
-    #Create a Perlwikipedia object
-    
-    my $editor = MediaWiki::Bot->new({
-        assert      => 'bot',
-        protocol    => $protocol,
-        host        => $host,
-        path        => $path,
-        login_data  => { username => $user, password => $pass },
-    });
-   
-    # Turn debugging on, to see what the bot is doing
-    $editor->{debug} = 1;
-    
-    my $wikitext = $editor->get_text('Rebost:'.$nomrebost);
+    my $page = $mw->get_page( { title => 'Rebost:'.$nomrebost } );
+    my $wikitext = $page->{'*'};
     my @wikilines = split(/\n/, $wikitext);
 
     my %platforms = ('os=win', $$list[0], 'os=osx', $$list[1], 'os=linux', $$list[2], '\/win32\/', $$list[0], '\/mac\/', $$list[1], '\/linux-i686\/', $$list[2], '\/android\/', $$list[0]);
@@ -220,18 +215,6 @@ sub send2wiki {
         
         $wikitext2 .= $wikiline. "\n";
     }
-    
-    #Create a Perlwikipedia object
-    my $editor2 = MediaWiki::Bot->new({
-        assert      => 'bot',
-        protocol    => $protocol,
-        host        => $host,
-        path        => $path,
-        login_data  => { username => $user, password => $pass },
-    });
-    
-    $editor2->{debug} = 1;
-
 
     my $enc = guess_encoding($wikitext2);
     my $utf8 = "";
@@ -252,12 +235,20 @@ sub send2wiki {
     #print $wikitext2
     my $nompage="Rebost:".$nomrebost;
     my $edit_summary = "Actualitzat a darrera versió";
+    
     if ($utf8 ne '') {
-    	$editor2->edit({
-        page    => $nompage,
-        text    => $utf8,
-        summary => $edit_summary
-   	});
+        
+        my $ref = $mw->get_page( { title => $nompage } );
+        unless ( $ref->{missing} ) {
+            my $timestamp = $ref->{timestamp};
+            $mw->edit( {
+                action => 'edit',
+                title => $nompage,
+                section => $edit_summary,
+                basetimestamp => $timestamp, # to avoid edit conflicts
+                text => $utf8 } )
+            || die $mw->{error}->{code} . ': ' . $mw->{error}->{details};
+        }
     }
 }
 
