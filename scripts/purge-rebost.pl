@@ -50,7 +50,8 @@ sub process_category {
 
 sub refreshPage {
     
-    my $page = shift;
+    my $pagename = shift;
+    my $edit_summary = "Refresh";
     
     my $ref = $mw->get_page( { title => $pagename } );
     unless ( $ref->{missing} ) {
