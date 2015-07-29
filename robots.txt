@@ -80,4 +80,10 @@ Allow: /w/sitemaps/sitemap-wikidb-NS_3-0.xml.gz
 Disallow: /dev-catalanitzador/
 # Programes FTP
 Disallow: /pub/
+# CSS + JS + Imatges
+Allow: /modules/*css
+Allow: /modules/*js
+Allow: /misc/*css
+Allow: /misc/*js
+Allow: /w/images/
 
