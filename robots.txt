@@ -86,4 +86,6 @@ Allow: /modules/*js
 Allow: /misc/*css
 Allow: /misc/*js
 Allow: /w/images/
+Allow: /w/load.php
+Allow: /w/*css
 
