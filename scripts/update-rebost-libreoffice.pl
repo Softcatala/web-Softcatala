@@ -48,18 +48,20 @@ $mw->login( {lgname => $user, lgpassword => $pass } )
 #8428597 5.0.4 http://download.documentfoundation.org/libreoffice/stable/5.0.4/mac/x86_64/LibreOffice_5.0.4_MacOS_x86-64_langpack_ca.dmg
 
 my @programs = (
-	( "LibreOffice", "Windows32" ),
-	( "LibreOffice", "Windows64" ),
-	( "LibreOffice", "OSX" ),
-	( "Paquet_d'ajuda_en_català_(valencià)_del_LibreOffice", "Windows32" ),
-	( "Paquet_d'ajuda_en_català_del_LibreOffice", "Windows32" ),
-	( "Paquet_d'ajuda_en_català_(valencià)_del_LibreOffice", "Windows64" ),
-	( "Paquet_d'ajuda_en_català_del_LibreOffice", "Windows64" ),
-	( "Paquet_català_(valencià)_per_al_LibreOffice", "OSX" ),
-	( "Paquet_català_per_al_LibreOffice", "OSX" )
+	[ "LibreOffice", "Windows32" ],
+	[ "LibreOffice", "Windows64" ],
+	[ "LibreOffice", "OSX" ],
+	[ "Paquet_d'ajuda_en_català_(valencià)_del_LibreOffice", "Windows32" ],
+	[ "Paquet_d'ajuda_en_català_del_LibreOffice", "Windows32" ],
+	[ "Paquet_d'ajuda_en_català_(valencià)_del_LibreOffice", "Windows64" ],
+	[ "Paquet_d'ajuda_en_català_del_LibreOffice", "Windows64" ],
+	[ "Paquet_català_(valencià)_per_al_LibreOffice", "OSX" ],
+	[ "Paquet_català_per_al_LibreOffice", "OSX" ]
 );
 
 @programs = process_version_text("https://gent.softcatala.org/jmontane/libo/latest_files.txt", \@programs);
+
+print Dumper( \@programs );
 
 # TODO: Send 2 wiki then
 
@@ -162,12 +164,11 @@ sub process_version_text() {
 		
 		chomp( $line );
 		my @elems = split( /\s+/, $line );
-		
-		push( $programs[$iter], @elems );
+				
+		push( @{$programs[$iter]}, @elems );
 		
 		$iter++;
 	}
-	
 	
 	
 	return @{$programs};
