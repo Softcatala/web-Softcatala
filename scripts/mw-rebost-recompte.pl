@@ -74,7 +74,7 @@ foreach my $year (sort keys %years) {
 
 	#Primer tot
 	my $all = $year."-all.txt";
-	if (defined($mirror) && $mirror=~/^\d+/) { $all = $year."-all-".$mirror.".txt"; }
+	if (defined($mirror) && $mirror=~/^\d+/ && $mirror > 0 ) { $all = $year."-all-".$mirror.".txt"; }
 	$tables.= &process_tables($all);
 
 	#Despres cada mes
