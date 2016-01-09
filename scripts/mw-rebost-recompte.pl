@@ -1,6 +1,6 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 use strict;
-
+use warnings;
 use utf8;
 use Encode;
 use URI::Escape;
