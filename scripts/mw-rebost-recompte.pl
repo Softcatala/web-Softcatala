@@ -66,7 +66,7 @@ foreach my $year (sort keys %years) {
 	print "Entering $year\n";
 
 	my $page = "Projectes/Rebost/$year";
-	if (defined($mirror) && $mirror=~/^\d+/) {$page = "Projectes/Rebost/$year/$cmirror{$mirror}";}
+	if (defined($mirror) && $mirror=~/^\d+/ && $mirror > 0 ) {$page = "Projectes/Rebost/$year/$cmirror{$mirror}";}
 
 	print STDERR $page, "\n";
 	my $tables = "";
