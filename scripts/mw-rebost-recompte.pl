@@ -92,12 +92,12 @@ sub process_tables {
 	my $mesfile = shift;
 	my $output;
 
-	open (READ, "$path/$mesfile") || die "Cannot open $mesfile!";
+	open (READ, "$dirpath/$mesfile") || die "Cannot open $mesfile!";
 
 	print STDERR $mesfile, "\n";
 
 	my ($infomes) = $mesfile =~ /\-(\S+)\.txt/;
-	if (defined($mirror) &&  $mirror=~/^\d+/) {($infomes) = $mesfile =~ /\-(\S+)\-$mirror\.txt/;}
+	if (defined($mirror) &&  $mirror=~/^\d+/ && $mirror > 0 ) {($infomes) = $mesfile =~ /\-(\S+)\-$mirror\.txt/;}
 
 	if ($infomes eq 'all') {
 		$output.= "== Tot l'any ==\n";
