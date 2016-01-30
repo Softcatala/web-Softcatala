@@ -61,79 +61,116 @@ my @programs = (
 
 @programs = process_version_text("https://gent.softcatala.org/jmontane/libo/latest_files.txt", \@programs);
 
-print Dumper( \@programs );
-
 # TODO: Send 2 wiki then
+send2wiki( \@programs );
+
 
 sub send2wiki {
     
-    my $list = shift;
-    my $version = shift;
-    my $nomrebost = shift;
+    my $programs = shift;
+	
+	my %hash;
     
-    my $page = $mw->get_page( { title => 'Rebost:'.$nomrebost } );
-    my $wikitext = $page->{'*'};
-    my @wikilines = split(/\n/, $wikitext);
+	#Reorder contents
+	foreach my $array ( @{ $programs } ) {
+		
+		my $prog = $array->[0];
+		my $os = $array->[1];
+		my $size = $array->[2];
+		my $version = $array->[3];
+		my $url = $array->[4];
+		
+		my @content = [ $size, $version, $url ];
+		
+		if ( ! defined ( $hash{$prog} ) ) {
+			$hash{$prog} = {};			
+		}
+		
+		if ( ! defined ( $hash{$prog}{$os} ) ) {
+			$hash{$prog}{$os} = ();			
+		}
+		
+		push( @{$hash{$prog}{$os}}, \@content) ;
+		
+		
+	}
+	
+	
+	foreach my $key ( keys %hash ) {
+		
+		my $page = $mw->get_page( { title => 'Rebost:'.$key } );
+		my $wikitext = $page->{'*'};
+		
+		
+		my @parts = split( /\{\{Fitxa\sprograma/, $wikitext );
+		my @cparts = ();
+		
+		foreach my $part ( @parts ) {
+			
+			# Detect OS -> Plataforma
+			# Detect URL -> URL programa
+			# Version -> Versió
+			# Mida -> Mida
+			
+			if ( $part=~/Plataforma\=(\S+)\s*/ ) {
+				
+				my $os = $1;
+				
+				if ( defined ( $hash{$key}{$os} ) ) {
 
-    my %platforms = ('os=win', $$list[0], 'os=osx', $$list[1], 'os=linux', $$list[2], '\/win32\/', $$list[0], '\/mac\/', $$list[1], '\/linux-i686\/', $$list[2], '\/android\/', $$list[0]);
-    my @platkeys = keys (%platforms);
-    
-    my $wikitext2;
+					my $list = $hash{$key}{$os}->[0]->[0];
+					$part=~s/Mida=\S+/Mida=$list->[0]/g;
+					$part=~s/Versió=\S+/Versió=$list->[1]/g;
+					$part=~s/URL\sprograma=\S+/URL programa=$list->[2]/g;
+					
+		
+				}
+				
+			}
+			
+			push( @cparts, $part );
 
-    foreach my $wikiline (@wikilines) {
-        
-        if ($wikiline=~/^\s*\|Versi\S+\s*\=/) {
-            
-            $wikiline = "|Versió=$version";
-            
-        }
-        
-        else {
-            foreach my $platkey (@platkeys) {
-                
-                if ($wikiline=~/$platkey/) {
-                    $wikiline = "|URL programa=$platforms{$platkey}";
-                }
-            } 
-        }
-        
-        $wikitext2 .= $wikiline. "\n";
-    }
+			
+		}
+		
+		my $wikitext2 = join( "{{Fitxa programa", @cparts );
+		
+		
+		my $nompage="Rebost:".$key;
+		my $edit_summary = "Actualitzat a darrera versió";
+		
+		my $enc = guess_encoding($wikitext2);
+		my $utf8 = "";
+		if(ref($enc)) {
+		
+		        if ($enc->name eq 'utf8') {
+		            $utf8 = $wikitext2;
+		    
+		        }
+		        else {
+		            
+		            $utf8 = $wikitext2;   
+		            
+		        }
+		}
+	
+		if ($utf8 ne '') {
+		    
+			print $utf8;
+		    my $ref = $mw->get_page( { title => $nompage } );
+		    unless ( $ref->{missing} ) {
+		        my $timestamp = $ref->{timestamp};
+		        $mw->edit( {
+		            action => 'edit',
+		            title => $nompage,
+		            summary => $edit_summary,
+		            basetimestamp => $timestamp, # to avoid edit conflicts
+		            text => $utf8 } )
+		        || die $mw->{error}->{code} . ': ' . $mw->{error}->{details};
+		    }
+		}
+	}
 
-    my $enc = guess_encoding($wikitext2);
-    my $utf8 = "";
-    if(ref($enc)) {
-    
-            if ($enc->name eq 'utf8') {
-                $utf8 = $wikitext2;
-        
-            }
-            else {
-                
-                $utf8 = $wikitext2;   
-                
-            }
-        }
-    
-
-    #print $wikitext2
-    my $nompage="Rebost:".$nomrebost;
-    my $edit_summary = "Actualitzat a darrera versió";
-    
-    if ($utf8 ne '') {
-        
-        my $ref = $mw->get_page( { title => $nompage } );
-        unless ( $ref->{missing} ) {
-            my $timestamp = $ref->{timestamp};
-            $mw->edit( {
-                action => 'edit',
-                title => $nompage,
-                summary => $edit_summary,
-                basetimestamp => $timestamp, # to avoid edit conflicts
-                text => $utf8 } )
-            || die $mw->{error}->{code} . ': ' . $mw->{error}->{details};
-        }
-    }
 }
 
 sub process_version_text() {
@@ -161,6 +198,10 @@ sub process_version_text() {
 	my @lines = split( /\n/, $content );
 	my $iter = 0;
 	foreach my $line ( @lines ) {
+		
+		if ( $line=~/^\#/ ) {
+			next;
+		}
 		
 		chomp( $line );
 		my @elems = split( /\s+/, $line );
