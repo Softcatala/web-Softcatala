@@ -1,0 +1,10 @@
+win
+nt
+mac
+lin
+unix
+beos
+os2
+amiga
+webtv
+iphone

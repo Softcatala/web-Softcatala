@@ -1,0 +1,11 @@
+Epiphany@@@4024
+Firefox@@@3522
+Flock@@@3668
+Google Chrome@@@4097
+Konqueror@@@4031
+SeaMonkey@@@3493
+Internet Explorer per al Windows Vista@@@4756
+Internet Explorer per al Windows XP@@@4755
+Paquet català per al Firefox@@@4704
+Paquet català (valencià) per al Firefox@@@4705
+Paquet català per al SeaMonkey@@@4708

@@ -1,0 +1,11 @@
+win32
+linux
+mac
+java
+win64
+linux64
+and
+mob
+ios
+web
+webapp
