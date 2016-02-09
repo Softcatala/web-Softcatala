@@ -1,3 +1,104 @@
 <?php
+/**
+ * top_so.php file
+ *
+ * This file echoes a json data array containing the total download information for the programs on the website
+ * classifying by Operating System
+ *
+ * @author Pau Iranzo <pau.iranzo@softcatala.org>
+ * @version 1.0
+ */
 
-class SC_Generate_TO
+
+class SC_Generate_Top
+{
+    protected $link;
+
+    const DB_User = 'rrebost';
+    const Operating_Systems_Mapping = array(
+        '1' => 'win32',
+        '2' => 'linux',
+        '3' => 'mac',
+        '4' => 'java',
+        '5' => 'win64',
+        '6' => 'linux64',
+        '7' => 'and',
+        '8' => 'mob',
+        '9' => 'ios',
+        '10' => 'web',
+        '11' => 'webapp'
+    );
+    const Operating_Systems = array(
+        'windows' => '"1","5"',
+        'linux' => '"2","6"',
+        'mac' => '3',
+        'android' => '7',
+        'ios' => '9'
+    );
+    const DB_Pass = 'mypasswd';
+    const DB_Name = 'rebost';
+    const Max_Count = '10';
+    const Lapse = '';
+
+    public function __construct()
+    {
+        $this->link = mysqli_connect('localhost', self::DB_User, self::DB_Pass, self::DB_Name);
+
+        if (!$this->link) {
+            echo "Error: Unable to connect to MySQL." . PHP_EOL;
+            echo "Debugging errno: " . mysqli_connect_errno() . PHP_EOL;
+            echo "Debugging error: " . mysqli_connect_error() . PHP_EOL;
+            exit;
+        }
+    }
+
+    /*
+     * Generates the final JSON of total downloads for the current month for each operating system
+     */
+    public function generate_json()
+    {
+        $json_downloads_data = array();
+        foreach ( self::Operating_Systems as $key => $os ) {
+            $json_downloads_data[$key] = $this->do_the_query( $os );
+
+        }
+
+        echo json_encode($json_downloads_data);
+    }
+
+    /*
+     * This function executes the query to obtain the most downloaded programs of the present month
+     * Program names are retrieved from the wiki database
+     */
+    public function do_the_query( $os )
+    {
+        $result = array();
+        $limit = self::Max_Count;
+
+        //Query to retrieve the programs
+        $query = "SELECT
+                       count(b.idrebost) as total,
+                       b.idrebost,
+                       w.page_title as Nom
+                  FROM wikidb.page w, rebost.baixades b
+                  WHERE
+                  YEAR(b.data) = YEAR(NOW())
+                  AND MONTH(b.data) = MONTH(NOW())
+                  AND w.page_id = b.idrebost
+                  AND so IN ($os)
+                  group by b.idrebost
+                  order by total DESC
+                  LIMIT $limit";
+
+        $query_result = $this->link->query($query);
+
+        while ($row = $query_result->fetch_object()){
+            $result[] = $row;
+        }
+
+        return $result;
+    }
+}
+
+$top = new SC_Generate_Top();
+$top->generate_json();
