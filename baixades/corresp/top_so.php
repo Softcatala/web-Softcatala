@@ -52,31 +52,81 @@ class SC_Generate_Top
         }
     }
 
-    /*
-     * Generates the final JSON of total downloads for the current month for each operating system
+    /**
+     * Main execution function
+     *
+     * @param void
+     * @return void
      */
-    public function generate_json()
+    public function run()
+    {
+        $type = $_GET['type'];
+
+        switch ( $type ) {
+            case 'full':
+                $this->generate_full_json();
+                break;
+            case 'top':
+                $this->generate_top_json();
+                break;
+        }
+
+        die();
+    }
+
+    /**
+     * Generates the final JSON of total downloads for the current month for each operating system
+     *
+     * @param void
+     * @return void
+     */
+    public function generate_full_json()
+    {
+        $query = $this->build_the_query( 'full' );
+        $json_downloads_data = $this->do_the_query( $query );
+
+        echo json_encode($json_downloads_data);
+    }
+
+    /**
+     * Generates the final JSON of total downloads for the current month for each operating system
+     *
+     * @param void
+     * @return void
+     */
+    public function generate_top_json()
     {
         $json_downloads_data = array();
         foreach ( self::Operating_Systems as $key => $os ) {
-            $json_downloads_data[$key] = $this->do_the_query( $os );
-
+            $query = $this->build_the_query( 'top', $os );
+            $json_downloads_data[$key] = $this->do_the_query( $query );
         }
 
         echo json_encode($json_downloads_data);
     }
 
-    /*
-     * This function executes the query to obtain the most downloaded programs of the present month
-     * Program names are retrieved from the wiki database
+    /**
+     * This function generates the DB query
+     *
+     * @param string $type
+     * @param array $os
+     * @return string $query
      */
-    public function do_the_query( $os )
+    private function build_the_query ( $type, $os = array() )
     {
-        $result = array();
-        $limit = self::Max_Count;
+        if ( $type == 'full' ) {
+            $query = "SELECT
+                       count(b.idrebost) as total,
+                       b.idrebost,
+                       w.page_title as Nom
+                  FROM wikidb.page w, rebost.baixades b
+                  WHERE w.page_id = b.idrebost
+                  group by b.idrebost";
 
-        //Query to retrieve the programs
-        $query = "SELECT
+        } else if ( $type == 'top' ) {
+            $limit = self::Max_Count;
+
+            $query = "SELECT
                        count(b.idrebost) as total,
                        b.idrebost,
                        w.page_title as Nom
@@ -89,6 +139,20 @@ class SC_Generate_Top
                   group by b.idrebost
                   order by total DESC
                   LIMIT $limit";
+        }
+
+        return $query;
+    }
+
+    /**
+     * This function executes the passed query
+     *
+     * @param string $query
+     * @return object $result
+     */
+    public function do_the_query( $query )
+    {
+        $result = array();
 
         $query_result = $this->link->query($query);
 
@@ -101,4 +165,4 @@ class SC_Generate_Top
 }
 
 $top = new SC_Generate_Top();
-$top->generate_json();
+$top->run();
