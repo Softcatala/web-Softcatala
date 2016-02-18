@@ -8,7 +8,9 @@
  * @author Pau Iranzo <pau.iranzo@softcatala.org>
  * @version 1.0
  */
-
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 class SC_Generate_Top
 {
@@ -43,6 +45,7 @@ class SC_Generate_Top
     public function __construct()
     {
         $this->link = mysqli_connect('localhost', self::DB_User, self::DB_Pass, self::DB_Name);
+        mysqli_set_charset($this->link, 'utf8');
 
         if (!$this->link) {
             echo "Error: Unable to connect to MySQL." . PHP_EOL;
@@ -116,25 +119,27 @@ class SC_Generate_Top
     {
         if ( $type == 'full' ) {
             $query = "SELECT
-                       count(b.idrebost) as total,
+                       count(b.wordpress_id) as total,
                        b.idrebost,
-                       w.page_title as Nom
-                  FROM wikidb.page w, rebost.baixades b
-                  WHERE w.page_id = b.idrebost
-                  group by b.idrebost";
+                       b.wordpress_id,
+                       t.title as Nom
+                  FROM baixades_titles t, baixades b
+                  WHERE t.wordpress_id = b.wordpress_id
+                  group by b.wordpress_id";
 
         } else if ( $type == 'top' ) {
             $limit = self::Max_Count;
 
             $query = "SELECT
-                       count(b.idrebost) as total,
+                       count(b.wordpress_id) as total,
                        b.idrebost,
-                       w.page_title as Nom
-                  FROM wikidb.page w, rebost.baixades b
+                       b.wordpress_id,
+                       t.title as Nom
+                  FROM baixades_titles t, baixades b
                   WHERE
                   YEAR(b.data) = YEAR(NOW())
                   AND MONTH(b.data) = MONTH(NOW())
-                  AND w.page_id = b.idrebost
+                  AND t.wordpress_id = b.wordpress_id
                   AND so IN ($os)
                   group by b.idrebost
                   order by total DESC
