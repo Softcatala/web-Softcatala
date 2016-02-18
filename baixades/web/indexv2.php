@@ -8,7 +8,8 @@
  * @author Pau Iranzo <pau.iranzo@softcatala.org>
  * @version 1.0
  */
-
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
 include("browser_detection.php");
 
 class SC_Baixades
@@ -31,9 +32,9 @@ class SC_Baixades
     private function getParams()
     {
         $params['url'] = $_GET['url'];
-        $params['extern'] = $_GET['extern'];
-        $params['mirall'] = $_GET['mirall'];
-        $params['idrebost'] = $_GET['id'];
+        $params['extern'] = ( isset( $_GET['extern'] ) ? $_GET['extern'] : '0' ) ;
+        $params['mirall'] = ( isset( $_GET['mirall'] ) ? $_GET['mirall'] : '0' ) ;
+        $params['idrebost'] = ( isset( $_GET['id'] ) ? $_GET['id'] : '0' ) ;
         $params['wordpress_id'] =$_GET['wid'];
         $params['so'] = $_GET['so'];
         $params['versio'] = $_GET['versio'];
@@ -61,16 +62,9 @@ class SC_Baixades
      * @return mixed
      */
     private function checkParams($params) {
-        if ( $params['url'] == '' || $params['url'] == '' || $params['so'] == '' || $params['versio'] == '' ) {
+        if ( $params['url'] == '' || $params['so'] == '' || $params['versio'] == '' || $params['wordpress_id'] == '' ) {
             header( 'Location: https://www.softcatala.org' ) ;
             die();
-        } else {
-            if ( $params['extern'] == '') {
-                $params['extern'] = 0;
-            }
-            if ( $params['idrebost'] == '') {
-                $params['idrebost'] = 0;
-            }
         }
 
         return $params;
@@ -90,11 +84,11 @@ class SC_Baixades
         $params = $this->getBrowserData($params);
 
         //Correspondencies
-        $params['mirall'] = getcorresp('mirall.txt', $params['mirall'] );
-        $params['so'] = getcorresp('so.txt', $params['so'] );
-        $params['browser']['os'] = getcorresp('os.txt', $params['browser']['os'] );
-        $params['browser']['type'] = getcorresp('type.txt', $params['browser']['type'] );
-        $params['browser']['browser'] = getcorresp( 'browser.txt', $params['browser']['browser'] );
+        $params['mirall'] = $this->getcorresp('mirall.txt', $params['mirall'] );
+        $params['so'] = $this->getcorresp('so.txt', $params['so'] );
+        $params['browser']['os'] = $this->getcorresp('os.txt', $params['browser']['os'] );
+        $params['browser']['type'] = $this->getcorresp('type.txt', $params['browser']['type'] );
+        $params['browser']['browser'] = $this->getcorresp( 'browser.txt', $params['browser']['browser'] );
 
         return $params;
     }
@@ -160,7 +154,7 @@ class SC_Baixades
                 `moz_name`,
                 `moz_name_version`
             )
-            VALUES ('%s', %s, %s, %d, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            VALUES ('%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', \"%s\")",
                 $params['data'],
                 $params['idrebost'],
                 $params['wordpress_id'],
@@ -178,7 +172,7 @@ class SC_Baixades
                 $params['browser']['moz_name_version']
         );
 
-        $this->do_the_query($query);
+        $result = $this->do_the_query($query);
     }
 
     /**
@@ -193,11 +187,27 @@ class SC_Baixades
 
         $query_result = $this->link->query($query);
 
-        while ($row = $query_result->fetch_object()){
-            $result[] = $row;
+        return $query_result;
+    }
+
+    /**
+     * Gets the corresponding number depending on the operating system
+     *
+     * @param $file
+     * @param $param
+     * @return int|string
+     */
+    private function getcorresp ( $file, $param ) {
+        $lines = file("../corresp/$file");
+        $out = 0;
+
+        foreach ($lines as $line_num => $line) {
+            if (rtrim($line) == rtrim($param)) {
+                $out = $line_num + 1;
+            }
         }
 
-        return $result;
+        return($out);
     }
 }
 
