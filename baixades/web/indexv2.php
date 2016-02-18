@@ -32,9 +32,9 @@ class SC_Baixades
     {
         $params['url'] = $_GET['url'];
         $params['extern'] = $_GET['extern'];
-        $params['mirall'] =$_GET['mirall'];
-        $params['idrebost'] =$_GET['id'];
-        $params['wordpress_id'] =$_GET['wordpress_id'];
+        $params['mirall'] = $_GET['mirall'];
+        $params['idrebost'] = $_GET['id'];
+        $params['wordpress_id'] =$_GET['wid'];
         $params['so'] = $_GET['so'];
         $params['versio'] = $_GET['versio'];
 
@@ -67,6 +67,9 @@ class SC_Baixades
         } else {
             if ( $params['extern'] == '') {
                 $params['extern'] = 0;
+            }
+            if ( $params['idrebost'] == '') {
+                $params['idrebost'] = 0;
             }
         }
 
