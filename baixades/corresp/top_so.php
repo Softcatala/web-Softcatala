@@ -63,7 +63,12 @@ class SC_Generate_Top
      */
     public function run()
     {
-        $type = $_GET['type'];
+        global $argc, $argv;
+        $type = (isset($_GET['type']) ? $_GET['type'] : '');
+
+        if(!$type && isset($argv[1])) {
+            $type = $argv[1];
+        }
 
         switch ( $type ) {
             case 'full':
