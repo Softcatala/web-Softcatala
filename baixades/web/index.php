@@ -1,256 +1,221 @@
 <?php
-
+/**
+ * Download count management file
+ *
+ * This file manages the download information whenever a user clicks on a download link in Softcatalà, it
+ * inserts the user information into the DB
+ *
+ * @author Pau Iranzo <pau.iranzo@softcatala.org>
+ * @version 1.0
+ */
 include("browser_detection.php");
+include("../../conf/db.php");
 
-#Retrieved parameters
-$url =$_GET['url'];
-$extern = $_GET['extern'];
-$mirall =$_GET['mirall'];
-$idrebost =$_GET['id'];
-$so = $_GET['so'];
-$versio = $_GET['versio'];
+class SC_Baixades
+{
+    protected $link;
 
-#$url="http://download.mozilla.org/?product=firefox-2.0.0.13&os=linux&lang=ca";
-#$url="ftp://ftp.softcatala.org/pub/softcatala/openoffice/2.3.1/windows/OOo_2.3.1_Win32Intel_install_ca.exe";
-#$idrebost ="OpenOffice.org";
-#$mirall ="softcatala";
-#$so = "win32";
-#$versio = "2.3.1";
-#$extern = 1;
+    public function run()
+    {
+         //Connect to the DB
+        $this->link = mysqli_connect('localhost', DB_USER , DB_PASS, DB_NAME);
 
-if (($url == '') or ($idrebost == '') or ($mirall == '')  or ($so == '') or ($versio == '')) {
+        //Process
+        $params = $this->getParams();
+        $url = $this->processDownloadRequest($params);
 
-	header( 'Location: https://www.softcatala.org' ) ;
+        header( 'Location: ' . $url );
+        die();
+    }
+
+    private function getParams()
+    {
+        $params['url'] = $_GET['url'];
+        $params['extern'] = ( isset( $_GET['extern'] ) ? $_GET['extern'] : '0' ) ;
+        $params['mirall'] = ( isset( $_GET['mirall'] ) ? $_GET['mirall'] : '0' ) ;
+        $params['idrebost'] = ( isset( $_GET['id'] ) ? $_GET['id'] : '0' ) ;
+        $params['wordpress_id'] =$_GET['wid'];
+        $params['so'] = $_GET['so'];
+        $params['versio'] = $_GET['versio'];
+
+        return $params;
+    }
+
+    /**
+     * Process the download params and prepare them for the insertion in the DB
+     *
+     * @param $params
+     */
+    private function processDownloadRequest($params)
+    {
+        $params = $this->checkParams($params);
+        $params = $this->prepareParams($params);
+
+        $this->insertDownloadInDB($params);
+
+        return $params['url'];
+
+    }
+
+    /**
+     * Checks whether all necessary params are set. If not, it redirects to the Softcatalà home page
+     *
+     * @param $params
+     * @return mixed
+     */
+    private function checkParams($params) {
+        if ( $params['url'] == '' || $params['so'] == '' || ( $params['wordpress_id'] == '' && $params['idrebost'] == '' )) {
+            if( $params['url'] != '' ) {
+                header( 'Location: ' . $params['url'] ) ;
+            } else {
+                header( 'Location: https://www.softcatala.org' ) ;
+            }
+            die();
+        }
+
+        return $params;
+    }
+
+    /**
+     * Prepare the params to be inserted in the DB
+     *
+     * @param $params
+     * @return mixed
+     */
+    private function prepareParams($params) {
+        //Download date
+        $params['data'] = date('Y-m-d H:i:s');
+
+        //Browser data
+        $params = $this->getBrowserData($params);
+
+        //Correspondencies
+        $params['mirall'] = $this->getcorresp('mirall.txt', $params['mirall'] );
+        $params['so'] = $this->getcorresp('so.txt', $params['so'] );
+        $params['browser']['os'] = $this->getcorresp('os.txt', $params['browser']['os'] );
+        $params['browser']['type'] = $this->getcorresp('type.txt', $params['browser']['type'] );
+        $params['browser']['browser'] = $this->getcorresp( 'browser.txt', $params['browser']['browser'] );
+
+        return $params;
+    }
+
+    /**
+     * Generate all the params related to browser information
+     *
+     * @param $params
+     * @return mixed
+     */
+    private function getBrowserData($params) {
+        $user_agent = $_SERVER['HTTP_USER_AGENT'];
+        $params['browser']['type'] = browser_detection( 'ua_type' );
+        $params['browser']['browser'] = browser_detection( 'browser' );
+        $params['browser']['version'] = browser_detection( 'browser_math_number' );
+        $params['browser']['os'] = browser_detection( 'os' );
+        $params['browser']['os_version'] = browser_detection( 'os_number' );
+
+        if ( $params['browser']['browser'] == 'moz' ) {
+            preg_match('/\s(\S+)$/', $user_agent, $moztag);
+            $moz_tags = $moztag[0];
+
+            $moztags = preg_split('/\//', $moz_tags);
+
+            $params['browser']['moz_name'] = $moztags[0];
+            $params['browser']['moz_name_version'] = $moztags[1];
+        }
+
+        if ( $params['browser']['browser'] == 'webkit' ) {
+            $moztags = browser_detection('webkit_data');
+            $params['browser']['moz_name'] = ucfirst($moztags[0]);
+            $params['browser']['moz_name_version'] = $moztags[1];
+        }
+
+        $codelang = preg_split("/\,/", $_SERVER["HTTP_ACCEPT_LANGUAGE"]);
+        $params['browser']['locale'] = $codelang[0];
+
+        return $params;
+    }
+
+    /**
+     * Inserts the download data in the DB
+     *
+     * @param $params
+     */
+    private function insertDownloadInDB($params)
+    {
+        $query = sprintf("
+            INSERT INTO baixades (
+                `data`,
+                `idrebost`,
+                `wordpress_id`,
+                `mirall`,
+                `extern`,
+                `so`,
+                `versio`,
+                `locale`,
+                `os`,
+                `os_version`,
+                `type`,
+                `browser`,
+                `browser_version`,
+                `moz_name`,
+                `moz_name_version`
+            )
+            VALUES ('%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', \"%s\")",
+                $params['data'],
+                $params['idrebost'],
+                $params['wordpress_id'],
+                $params['mirall'],
+                $params['extern'],
+                $params['so'],
+                $params['versio'],
+                $params['browser']['locale'],
+                $params['browser']['os'],
+                $params['browser']['os_version'],
+                $params['browser']['type'],
+                $params['browser']['browser'],
+                $params['browser']['version'],
+                $params['browser']['moz_name'],
+                $params['browser']['moz_name_version']
+        );
+
+        $result = $this->do_the_query($query);
+    }
+
+    /**
+     * This function executes the passed query
+     *
+     * @param string $query
+     * @return object $result
+     */
+    public function do_the_query( $query )
+    {
+        $result = array();
+
+        $query_result = $this->link->query($query);
+
+        return $query_result;
+    }
+
+    /**
+     * Gets the corresponding number depending on the operating system
+     *
+     * @param $file
+     * @param $param
+     * @return int|string
+     */
+    private function getcorresp ( $file, $param ) {
+        $lines = file("../corresp/$file");
+        $out = 0;
+
+        foreach ($lines as $line_num => $line) {
+            if (rtrim($line) == rtrim($param)) {
+                $out = $line_num + 1;
+            }
+        }
+
+        return($out);
+    }
 }
 
-if ($extern == '') {
-
-	$extern = 0;
-}
-
-#Detection parameters
-#Time
-$data_actual = getdate();
-
-$any_actual = $data_actual['year'];
-$mes_actual = two_digits($data_actual['mon']);
-$dia_actual = two_digits($data_actual['mday']);
-$hora_actual = two_digits($data_actual['hours']);
-$minut_actual = two_digits($data_actual['minutes']);
-$segon_actual = two_digits($data_actual['seconds']);
-
-$string_data_actual = $any_actual.$mes_actual.$dia_actual.$hora_actual.$minut_actual.$segon_actual;
-
-#Client parameters
-
-$user_agent = $_SERVER['HTTP_USER_AGENT'];
-
-$type = browser_detection( 'ua_type' );
-$browser = browser_detection( 'browser' );
-$version = browser_detection( 'browser_math_number' );
-$os = browser_detection( 'os' );
-$os_version = browser_detection( 'os_number' );
-
-$moz_browser ="undefined";
-
-if ($browser == 'moz') {
-
-	preg_match('/\s(\S+)$/', $user_agent, $moztag);
-	$moz_tags = $moztag[0];
-
-	$moztags = preg_split('/\//', $moz_tags);
-
-	$moz_name = $moztags[0];
-	$moz_name_version = $moztags[1];
-}
-
-if ($browser == 'webkit') {
-
-        $moztags = browser_detection('webkit_data');
-        $moz_name = ucfirst($moztags[0]);
-        $moz_name_version = $moztags[1];
-
-}
-
-
-$codelang = preg_split("/\,/", $_SERVER["HTTP_ACCEPT_LANGUAGE"]);
-$locale = $codelang[0];
-
-
-
-
-#Correspondences
-$mirall = getcorresp('mirall.txt', $mirall);
-$so = getcorresp('so.txt', $so);
-$os = getcorresp('os.txt', $os);
-$type = getcorresp('type.txt', $type);
-$browser = getcorresp('browser.txt', $browser);
-
-
-
-#Insert in MySQL
-insert_in_db($string_data_actual, $locale, $os, $os_version, $type, $browser, $version, $moz_name, $moz_name_version,
-			$extern,$mirall, $idrebost, $so, $versio);
-
-#header('Content-Type: text/html; charset=utf-8');
-
-#echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
-
-#echo "\n". "<html>";
-
-#echo "<body>\n";
-
-#echo (
-#'Version'. $version .'<br />'.
-#'os_version'.$os_version .'<br />'
-#);
-
-#echo "Language:". $locale . "<br />";
-
-#echo $string_data_actual. "<br />";
-
-#echo "</body>\n";
-#echo "</html>\n";
-
-
-header( 'Location: '.$url ) ;
-
-
-function two_digits($date) {
-
-	if (strlen($date) == 1) {
-
-	$date = "0".$date;
-
-	}
-
-	return($date);
-}
-
-function insert_in_db($string_data_actual, $locale, $os, $os_version, $type, $browser, $version, $moz_name, $moz_name_version,
-			$extern,$mirall, $idrebost, $so, $versio) {
-
-	$link = mysql_connect('localhost', 'rebost', 'mypasswd');
-
-
-	if(!is_resource($link)) {
-
-
-        die ("Failed to connect to the server\n");
-
-    } else {
-
-    	$db_selected = mysql_select_db('rebost', $link);
-
-		if (!$db_selected) {
-    		die ('Can\'t use foo : ' . mysql_error());
-		}
-
-		else {
-
-			$idrebost = die_if_blank($idrebost);
-			$mirall = die_if_blank($mirall);
-			$so = die_if_blank($so);
-			$versio = die_if_blank($versio);
-
-			$locale = make_null($locale);
-			$os = make_null($os);
-			$os_version = make_null($os_version);
-			$type = make_null($type);
-			$browser = make_null($browser);
-			$version = make_null($version);
-			$moz_name = make_null($moz_name);
-			$moz_name_version = make_null($moz_name_version);
-
-			mysql_query("SET NAMES 'utf8'");
-
-			// Make a safe query
-		    $query = sprintf("INSERT INTO baixades (`data`, `idrebost`, `mirall`, `extern`, `so`, `versio`, " .
-		    		"`locale`, `os`, `os_version`, `type`, `browser`, `browser_version`, `moz_name`, `moz_name_version`  ) " .
-		    		"VALUES ('%s', %s, %s, %d, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-		    		$string_data_actual,
-		    		$idrebost,
-					$mirall,
-					$extern,
-					$so,
-					$versio,
-					$locale,
-					$os,
-					$os_version,
-					$type,
-					$browser,
-					$version,
-					$moz_name,
-					$moz_name_version
-					);
-
-			#echo $query, "<br />";
-		    mysql_query($query, $link);
-
-		}
-
-		mysql_close($link);
-
-	}
-
-}
-
-#Quit program if key params are blank
-function die_if_blank ($param) {
-
-	if (preg_match('/^\s*$/', $param)) {
-
-		die;
-	}
-
-	else {
-
-		$param = "'". mysql_real_escape_string($param) . "'";
-		return($param);
-	}
-
-}
-
-#NULL if pertinent
-function make_null ($param) {
-
-	if (preg_match('/^\s*$/', $param)) {
-
-		$param = 'NULL';
-	}
-
-	else {
-
-		$param = "'". mysql_real_escape_string($param). "'";
-
-	}
-
-	return($param);
-
-}
-
-function getcorresp ($file, $param) {
-
-	$lines = file("../corresp/$file");
-
-	$out = 0;
-
-	foreach ($lines as $line_num => $line) {
-
-		if (rtrim($line) == rtrim($param)) {
-
-			$out = $line_num + 1;
-			#echo "Au -> $line - $param: $out<br />\n";
-
-		}
-
-	}
-
-	return($out);
-
-}
-
-
-?>
-
-
+$baixada = new SC_Baixades();
+$baixada->run();
