@@ -21,12 +21,20 @@ class SC_Baixades
 
     public function __construct()
     {
-        //Connect to the DB
+       
+    }
+    
+    public function run() 
+    {
+         //Connect to the DB
         $this->link = mysqli_connect('localhost', self::DB_User, self::DB_Pass, self::DB_Name);
 
         //Process
         $params = $this->getParams();
-        $this->processDownloadRequest($params);
+        $url = $this->processDownloadRequest($params);
+        
+        header( 'Location: ' . $url );
+        die();
     }
 
     private function getParams()
@@ -53,6 +61,9 @@ class SC_Baixades
         $params = $this->prepareParams($params);
 
         $this->insertDownloadInDB($params);
+        
+        return $params['url'];
+        
     }
 
     /**
@@ -62,9 +73,12 @@ class SC_Baixades
      * @return mixed
      */
     private function checkParams($params) {
-        if ( $params['url'] == '' || $params['so'] == '' || $params['versio'] == '' 
-            || ( $params['wordpress_id'] == '' && $params['idrebost'] == '' )) {
-            header( 'Location: https://www.softcatala.org' ) ;
+        if ( $params['url'] == '' || $params['so'] == '' || ( $params['wordpress_id'] == '' && $params['idrebost'] == '' )) {
+            if( $params['url'] != '' ) {
+                header( 'Location: ' . $params['url'] ) ;
+            } else {
+                header( 'Location: https://www.softcatala.org' ) ;
+            }
             die();
         }
 
@@ -79,7 +93,7 @@ class SC_Baixades
      */
     private function prepareParams($params) {
         //Download date
-        $params['data'] = date('Y-m-d h:i:s');
+        $params['data'] = date('Y-m-d H:i:s');
 
         //Browser data
         $params = $this->getBrowserData($params);
