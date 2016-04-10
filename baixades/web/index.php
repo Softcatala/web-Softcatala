@@ -9,7 +9,7 @@
  * @version 1.0
  */
 include("browser_detection.php");
-include("../../conf/db.php");
+include("../conf/db.php");
 
 class SC_Baixades
 {
