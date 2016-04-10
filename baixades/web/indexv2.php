@@ -62,7 +62,8 @@ class SC_Baixades
      * @return mixed
      */
     private function checkParams($params) {
-        if ( $params['url'] == '' || $params['so'] == '' || $params['versio'] == '' ) {
+        if ( $params['url'] == '' || $params['so'] == '' || $params['versio'] == '' 
+            || ( $params['wordpress_id'] == '' && $params['idrebost'] == '' )) {
             header( 'Location: https://www.softcatala.org' ) ;
             die();
         }
