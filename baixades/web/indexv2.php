@@ -8,31 +8,22 @@
  * @author Pau Iranzo <pau.iranzo@softcatala.org>
  * @version 1.0
  */
-error_reporting(E_ALL);
-ini_set("display_errors", 1);
 include("browser_detection.php");
+include("../../conf/db.php");
 
 class SC_Baixades
 {
     protected $link;
-    const DB_User = 'rrebost';
-    const DB_Pass = 'mypasswd';
-    const DB_Name = 'rebost';
 
-    public function __construct()
-    {
-       
-    }
-    
-    public function run() 
+    public function run()
     {
          //Connect to the DB
-        $this->link = mysqli_connect('localhost', self::DB_User, self::DB_Pass, self::DB_Name);
+        $this->link = mysqli_connect('localhost', DB_USER , DB_PASS, DB_NAME);
 
         //Process
         $params = $this->getParams();
         $url = $this->processDownloadRequest($params);
-        
+
         header( 'Location: ' . $url );
         die();
     }
@@ -61,9 +52,9 @@ class SC_Baixades
         $params = $this->prepareParams($params);
 
         $this->insertDownloadInDB($params);
-        
+
         return $params['url'];
-        
+
     }
 
     /**
@@ -228,4 +219,3 @@ class SC_Baixades
 
 $baixada = new SC_Baixades();
 $baixada->run();
-
