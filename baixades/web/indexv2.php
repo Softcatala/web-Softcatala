@@ -226,6 +226,6 @@ class SC_Baixades
     }
 }
 
-new SC_Baixades();
-
+$baixada = new SC_Baixades();
+$baixada->run();
 
