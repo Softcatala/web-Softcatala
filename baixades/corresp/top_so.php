@@ -135,20 +135,30 @@ class SC_Generate_Top
         } else if ( $type == 'top' ) {
             $limit = self::Max_Count;
 
-            $query = "SELECT
-                       count(b.wordpress_id) as total,
-                       b.idrebost,
-                       b.wordpress_id,
-                       t.title as Nom
-                  FROM baixades_titles t, baixades b
-                  WHERE
-                  YEAR(b.data) = YEAR(NOW())
-                  AND MONTH(b.data) = MONTH(NOW())
-                  AND t.wordpress_id = b.wordpress_id
-                  AND so IN ($os)
-                  group by b.idrebost
-                  order by total DESC
-                  LIMIT $limit";
+            $from = date('Y-m-01');
+            $to = date('Y-m-01', strtotime('first day of next month'));
+
+            $query = "select SQL_NO_CACHE total, x.wordpress_id, p.programa_id, name from (
+                                select
+                                count(1) as total, b.wordpress_id, 0 as idrebost
+                                from baixades b
+                                WHERE
+                                b.data between '2016-06-01' and '2016-07-01'
+                                AND so IN (1,5)
+                                group by b.wordpress_id
+                                union
+                                select
+                                count(1) as total, 0 as wordpress_id, 0 as idrebost
+                                from baixades b2
+                                WHERE
+                                b2.wordpress_id = 0 AND
+                                b2.data between '2016-05-01' and '2016-06-01'
+                                AND so IN (1,5)
+                                group by b2.idrebost
+                        ) x inner join programes p
+                        on x.idrebost = p.idrebost or x.wordpress_id = p.wordpress_id
+                        order by total desc
+                        limit 20";
         }
 
         return $query;
