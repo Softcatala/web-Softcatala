@@ -85,7 +85,19 @@ class SC_Generate_Top
                     }
                 }
 
-                $this->generate_top_json($count);
+                if ( isset($_GET['from']) ){
+                    $from = $this->link->real_escape_string($_GET['from']);
+                } else {
+                    $from = date('Y-m-01');
+                }
+
+                if ( isset($_GET['to']) ){
+                    $to = $this->link->real_escape_string($_GET['to']);
+                } else {
+                    $to = date('Y-m-01', strtotime('first day of next month'));
+                }
+
+                $this->generate_top_json($count, $from, $to);
                 break;
         }
 
@@ -112,11 +124,11 @@ class SC_Generate_Top
      * @param void
      * @return void
      */
-    public function generate_top_json($count)
+    public function generate_top_json($count, $from, $to)
     {
         $json_downloads_data = array();
         foreach ( self::Operating_Systems as $key => $os ) {
-            $query = $this->build_the_query( 'top', $os, $count );
+            $query = $this->build_the_query( 'top', $os, $count, $from, $to );
             $json_downloads_data[$key] = $this->do_the_query( $query );
         }
 
@@ -130,7 +142,7 @@ class SC_Generate_Top
      * @param array $os
      * @return string $query
      */
-    private function build_the_query ( $type, $os = array(), $limit )
+    private function build_the_query ( $type, $os = array(), $limit, $from, $to )
     {
         if ( $type == 'full' ) {
             $query = "SELECT
@@ -143,8 +155,7 @@ class SC_Generate_Top
                   group by b.wordpress_id";
 
         } else if ( $type == 'top' ) {
-            $from = date('Y-m-01');
-            $to = date('Y-m-01', strtotime('first day of next month'));
+
             $query = "select
                         sum(partial_total) as total, wordpress_id, programa_id, name from (
                         select partial_total, p.wordpress_id, p.programa_id, name from (
