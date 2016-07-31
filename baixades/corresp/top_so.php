@@ -39,7 +39,8 @@ class SC_Generate_Top
     );
     const DB_Pass = 'mypasswd';
     const DB_Name = 'rebost';
-    const Max_Count = '10';
+    const Max_Count = '100';
+    const Default_Count = '10';
     const Lapse = '';
 
     public function __construct()
@@ -75,7 +76,16 @@ class SC_Generate_Top
                 $this->generate_full_json();
                 break;
             case 'top':
-                $this->generate_top_json();
+                $count = self::Default_Count;
+
+                if( isset($_GET['count'] ) ) {
+
+                    if ( is_numeric($_GET['count']) && $_GET['count'] > 0) {
+                        $count = min( $_GET['count'], self::Max_Count );
+                    }
+                }
+
+                $this->generate_top_json($count);
                 break;
         }
 
@@ -102,11 +112,11 @@ class SC_Generate_Top
      * @param void
      * @return void
      */
-    public function generate_top_json()
+    public function generate_top_json($count)
     {
         $json_downloads_data = array();
         foreach ( self::Operating_Systems as $key => $os ) {
-            $query = $this->build_the_query( 'top', $os );
+            $query = $this->build_the_query( 'top', $os, $count );
             $json_downloads_data[$key] = $this->do_the_query( $query );
         }
 
@@ -120,7 +130,7 @@ class SC_Generate_Top
      * @param array $os
      * @return string $query
      */
-    private function build_the_query ( $type, $os = array() )
+    private function build_the_query ( $type, $os = array(), $limit )
     {
         if ( $type == 'full' ) {
             $query = "SELECT
@@ -133,8 +143,6 @@ class SC_Generate_Top
                   group by b.wordpress_id";
 
         } else if ( $type == 'top' ) {
-            $limit = self::Max_Count;
-
             $from = date('Y-m-01');
             $to = date('Y-m-01', strtotime('first day of next month'));
             $query = "select
