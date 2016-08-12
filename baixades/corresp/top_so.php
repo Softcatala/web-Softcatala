@@ -112,7 +112,7 @@ class SC_Generate_Top
      */
     public function generate_full_json()
     {
-        $query = $this->build_the_query( 'full' );
+        $query = $this->build_the_query_full();
         $json_downloads_data = $this->do_the_query( $query );
 
         echo json_encode($json_downloads_data);
@@ -128,7 +128,7 @@ class SC_Generate_Top
     {
         $json_downloads_data = array();
         foreach ( self::Operating_Systems as $key => $os ) {
-            $query = $this->build_the_query( 'top', $os, $count, $from, $to );
+            $query = $this->build_the_query_top($os, $count, $from, $to );
             $json_downloads_data[$key] = $this->do_the_query( $query );
         }
 
@@ -142,10 +142,8 @@ class SC_Generate_Top
      * @param array $os
      * @return string $query
      */
-    private function build_the_query ( $type, $os = array(), $limit, $from, $to )
-    {
-        if ( $type == 'full' ) {
-            $query = "SELECT
+	private function build_the_query_full() {
+		return  "SELECT
                        count(b.wordpress_id) as total,
                        b.idrebost,
                        b.wordpress_id,
@@ -153,38 +151,35 @@ class SC_Generate_Top
                   FROM baixades_titles t, baixades b
                   WHERE t.wordpress_id = b.wordpress_id
                   group by b.wordpress_id";
-
-        } else if ( $type == 'top' ) {
-
-            $query = "select
-                        sum(partial_total) as total, wordpress_id, programa_id, name from (
-                        select partial_total, p.wordpress_id, p.programa_id, name from (
-                                        select
-                                        count(1) as partial_total, b.wordpress_id, 0 as idrebost
-                                        from baixades b
-                                        WHERE
-                                        b.data between '$from' and '$to'
-                                        AND so IN ($os)
-                                        group by b.wordpress_id
-                                        union
-                                        select
-                                        count(1) as total, 0 as wordpress_id, idrebost
-                                        from baixades b2
-                                        WHERE
-                                        b2.wordpress_id = 0 AND
-                                        b2.data between '$from' and '$to'
-                                        AND so IN ($os)
-                                        group by b2.idrebost
-                                ) x inner join programes p
-                                on x.idrebost = p.idrebost or x.wordpress_id = p.wordpress_id
-                        ) g
-                        group by programa_id
-                        order by total desc
-                        limit $limit";
-
-        }
-
-        return $query;
+	} 
+	
+    private function build_the_query_top ( $os, $limit, $from, $to )
+    {
+        return "select
+					sum(partial_total) as total, wordpress_id, programa_id, name from (
+					select partial_total, p.wordpress_id, p.programa_id, name from (
+									select
+									count(1) as partial_total, b.wordpress_id, 0 as idrebost
+									from baixades b
+									WHERE
+									b.data between '$from' and '$to'
+									AND so IN ($os)
+									group by b.wordpress_id
+									union
+									select
+									count(1) as total, 0 as wordpress_id, idrebost
+									from baixades b2
+									WHERE
+									b2.wordpress_id = 0 AND
+									b2.data between '$from' and '$to'
+									AND so IN ($os)
+									group by b2.idrebost
+							) x inner join programes p
+							on x.idrebost = p.idrebost or x.wordpress_id = p.wordpress_id
+					) g
+					group by programa_id
+					order by total desc
+					limit $limit";
     }
 
     /**
