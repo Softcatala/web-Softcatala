@@ -147,8 +147,8 @@ class SC_Generate_Top
                        count(b.wordpress_id) as total,
                        b.idrebost,
                        b.wordpress_id,
-                       t.title as Nom
-                  FROM baixades_titles t, baixades b
+                       t.name as Nom
+                  FROM programes t, baixades b
                   WHERE t.wordpress_id = b.wordpress_id
                   group by b.wordpress_id";
 	} 
